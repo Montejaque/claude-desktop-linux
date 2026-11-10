@@ -33,7 +33,9 @@ jobs:
             python3 scripts/build-help-pdf.py
           '
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
+          retention-days: 1
           name: Claude-Desktop-Installer-Linux
           path: |
             dist/*.AppImage

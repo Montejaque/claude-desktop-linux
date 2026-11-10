@@ -1,3 +1,2 @@
-"""Claude Desktop Linux Installer."""
-
-__version__ = "0.1.0"
+"""Claude Desktop Installer by La Central Digital."""
+__version__ = "1.0.0"

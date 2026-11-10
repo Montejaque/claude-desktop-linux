@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-desktop-linux-installer"
-version = "0.1.0"
-description = "Per-user graphical installer and compatibility checker for Claude Desktop on Linux"
+version = "0.2.0"
+description = "Per-user graphical installer for the community Claude Desktop AppImage on Linux"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "Proprietary - license to be decided" }

@@ -53,9 +53,11 @@ El paquete oficial consultado declara libc6 >= 2.34; Ubuntu 20.04 normalmente in
 La firma GPG, la huella de clave y los hashes se verifican antes de extraer. No se solicitan credenciales. Si falla la verificación, revisa conexión, fecha y hora y no omitas la comprobación. Si no aparece el icono o falla el retorno desde Google, usa **Reparar acceso**. Si falta dpkg-deb, debe estar disponible para extraer el paquete.
 
 ## 12. Desarrollador
-**José Miguel Leotte** · **La Central Digital**  
-Teléfono: +34 617 92 57 68  
-Correo: info@lacentraldigital.es  
-Web: https://lacentraldigital.es
+**Desarrollador: Francisco Javier Gallego Orellana**  
+**Punto Vuela Montejaque**  
+Avenida Andalucía, 48 · 29360 Montejaque (Málaga)  
+Teléfono: 633 402 959  
+Correo: montejaque@puntosvuela.es  
+Web: https://puntosvuela.es/centros/montejaque
 
 Proyecto independiente, no afiliado a Anthropic.

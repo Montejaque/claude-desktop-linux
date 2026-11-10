@@ -1,2 +1,2 @@
-"""Claude Desktop Installer by La Central Digital."""
-__version__ = "1.0.0"
+"""Claude Desktop Installer · Punto Vuela Montejaque."""
+__version__ = "1.0.1"

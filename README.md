@@ -31,9 +31,10 @@ Consulta docs/BUILD_APPIMAGE.md. La AppImage contiene el instalador; Claude Desk
 - SECURITY.md
 
 ## Desarrollador y contacto
-**José Miguel Leotte** · **La Central Digital**  
-Teléfono: +34 617 92 57 68  
-Correo: info@lacentraldigital.es  
-Web: https://lacentraldigital.es
+**Desarrollador: Francisco Javier Gallego Orellana** · **Punto Vuela Montejaque**  
+Dirección: Avenida Andalucía, 48 · 29360 Montejaque (Málaga)  
+Teléfono: 633 402 959  
+Correo: montejaque@puntosvuela.es  
+Web: https://puntosvuela.es/centros/montejaque
 
 Claude y Anthropic son marcas de sus titulares. Este instalador es independiente y no está afiliado, patrocinado ni certificado por Anthropic.

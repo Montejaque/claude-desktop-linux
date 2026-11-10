@@ -5,7 +5,7 @@ from tkinter import messagebox,ttk
 from .installer import InstallError,check_latest,install_latest,is_installed,installed_version,launch,repair_access,uninstall
 from .system_info import compatibility_summary
 BG="#FFFFFF"; FG="#252525"; MUTED="#686868"; PANEL="#F6F6F6"; YELLOW="#F3D54E"
-DEVELOPER="José Miguel Leotte · La Central Digital"; PHONE="+34 617 92 57 68"; EMAIL="info@lacentraldigital.es"; WEB="https://lacentraldigital.es"
+DEVELOPER="Francisco Javier Gallego Orellana · Punto Vuela Montejaque"; PHONE="633 402 959"; EMAIL="montejaque@puntosvuela.es"; ADDRESS="Avenida Andalucía, 48 · 29360 Montejaque (Málaga)"; WEB="https://puntosvuela.es/centros/montejaque"
 GUIDE="https://github.com/Montejaque/claude-desktop-linux/blob/main/docs/GUIA_USUARIO.md"
 class InstallerApp:
  def __init__(self,root):
@@ -38,9 +38,11 @@ class InstallerApp:
   self.open_button=ttk.Button(actions,text="Abrir Claude",command=self.open_app); self.open_button.pack(side="left",padx=5)
   logframe=tk.Frame(outer,bg=PANEL,padx=10,pady=8); logframe.pack(fill="both",expand=True,pady=(4,12)); tk.Label(logframe,text="REGISTRO DE ACTIVIDAD",bg=PANEL,fg=MUTED,font=("DejaVu Sans",8,"bold")).pack(anchor="w")
   self.log=tk.Text(logframe,height=5,wrap="word",bg="#FFFFFF",fg=FG,relief="flat",font=("DejaVu Sans Mono",8),state="disabled"); self.log.pack(fill="both",expand=True,pady=(5,0))
-  footer=tk.Frame(outer,bg=BG); footer.pack(fill="x"); tk.Label(footer,text="DESARROLLADO POR",bg=BG,fg=MUTED,font=("DejaVu Sans",8,"bold")).pack(anchor="w")
+  footer=tk.Frame(outer,bg=BG); footer.pack(fill="x"); tk.Label(footer,text="DESARROLLADOR · PUNTO VUELA MONTEJAQUE",bg=BG,fg=MUTED,font=("DejaVu Sans",8,"bold")).pack(anchor="w")
   tk.Label(footer,text=DEVELOPER,bg=BG,fg=FG,font=("DejaVu Sans",9,"bold")).pack(anchor="w",pady=(2,0))
-  tk.Label(footer,text=PHONE+"  ·  "+EMAIL+"  ·  "+WEB,bg=BG,fg="#6A5700",font=("DejaVu Sans",8)).pack(anchor="w",pady=(2,0))
+  tk.Label(footer,text=ADDRESS,bg=BG,fg=FG,font=("DejaVu Sans",8)).pack(anchor="w",pady=(2,0))
+  tk.Label(footer,text="Tel. "+PHONE+"  ·  "+EMAIL,bg=BG,fg="#6A5700",font=("DejaVu Sans",8)).pack(anchor="w",pady=(2,0))
+  tk.Label(footer,text=WEB,bg=BG,fg="#6A5700",font=("DejaVu Sans",8)).pack(anchor="w",pady=(2,0))
   links=tk.Frame(footer,bg=BG); links.pack(fill="x",pady=(8,0)); tk.Button(links,text="Ver guía de ayuda",command=lambda:webbrowser.open(GUIDE),relief="flat",bg=YELLOW,fg=FG,padx=12,pady=5).pack(side="left")
   ttk.Button(links,text="Cerrar",command=root.destroy).pack(side="right"); self.refresh()
  def _summary(self): return "Claude Desktop instalado · versión %s"%(installed_version() or "desconocida") if is_installed() else "Claude Desktop todavía no está instalado."

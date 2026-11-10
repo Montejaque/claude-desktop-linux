@@ -16,6 +16,16 @@ def is_installed(): return (INSTALL_DIR/"usr/lib/claude-desktop/claude-desktop")
 def installed_version():
     try: return (INSTALL_DIR/"INSTALLER_VERSION").read_text(encoding="utf-8").strip()
     except OSError: return None
+def version_is_newer(candidate, current):
+    """Compare Debian package versions; return None if comparison is unavailable."""
+    if not candidate or not current or not shutil.which("dpkg"):
+        return None
+    result = subprocess.run(
+        ["dpkg", "--compare-versions", str(candidate), "gt", str(current)],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+    )
+    return result.returncode == 0
+
 def _optional(command):
     try: subprocess.run(command,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15,check=False)
     except (OSError,subprocess.SubprocessError): pass
@@ -85,7 +95,7 @@ def launch():
     subprocess.Popen([str(WRAPPER)],cwd=str(INSTALL_DIR),env=os.environ.copy(),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
 def uninstall():
     if INSTALL_DIR.exists(): shutil.rmtree(INSTALL_DIR)
-    for path in (DESKTOP,WRAPPER,ICON):
+    if CACHE.exists(): shutil.rmtree(CACHE)\n    for path in (DESKTOP,WRAPPER,ICON):
         try: path.unlink()
         except FileNotFoundError: pass
     _optional(["update-desktop-database",str(APPLICATIONS)])

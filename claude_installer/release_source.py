@@ -1,133 +1,111 @@
-"""Fetch and verify the latest community AppImage release.
-
-The AppImage is built by a third-party project, not Anthropic. We only accept
-assets from its canonical GitHub release API and require GitHub's SHA-256 digest.
-"""
+"""Download and cryptographically verify the official Anthropic APT package."""
 from __future__ import annotations
-
-import hashlib
-import json
-import platform
-import re
-import shutil
-import urllib.request
+import hashlib, platform, re, shutil, subprocess, urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
-RELEASE_API = "https://api.github.com/repos/aaddrick/claude-desktop-debian/releases/latest"
-USER_AGENT = "Montejaque-Claude-Desktop-Installer/0.2.0"
-MAX_DOWNLOAD_BYTES = 600 * 1024 * 1024
-
-
-class ReleaseError(RuntimeError):
-    pass
-
-
+BASE_URL="https://downloads.claude.ai/claude-desktop/apt/stable"
+KEY_URL="https://downloads.claude.ai/claude-desktop/key.asc"
+EXPECTED_FINGERPRINT="31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE"
+MAX_INDEX_BYTES=30*1024*1024
+MAX_PACKAGE_BYTES=900*1024*1024
+USER_AGENT="LaCentralDigital-ClaudeDesktopInstaller/1.0"
+class ReleaseError(RuntimeError): pass
 @dataclass(frozen=True)
-class ReleaseAsset:
-    version: str
-    name: str
-    url: str
-    sha256: str
-    size: int
+class PackageInfo:
+    version:str
+    architecture:str
+    filename:str
+    sha256:str
+    size:int
+    url:str
 
-
-def _request(url: str, timeout: int = 30):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Accept": "application/vnd.github+json",
-        },
-    )
-    return urllib.request.urlopen(req, timeout=timeout)
-
-
-def architecture_asset() -> str:
-    machine = platform.machine().lower()
-    if machine in ("x86_64", "amd64"):
-        return "amd64"
-    if machine in ("aarch64", "arm64"):
-        return "arm64"
-    raise ReleaseError("Arquitectura no compatible con las versiones publicadas (amd64/arm64).")
-
-
-def get_latest_asset() -> ReleaseAsset:
-    arch = architecture_asset()
+def _request(url,timeout=45):
+    return urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":USER_AGENT}),timeout=timeout)
+def architecture():
+    machine=platform.machine().lower()
+    if machine in ("x86_64","amd64"): return "amd64"
+    if machine in ("aarch64","arm64"): return "arm64"
+    raise ReleaseError("Arquitectura no compatible. Se requiere amd64 o arm64.")
+def _read_url(url,limit):
+    with _request(url) as response: data=response.read(limit+1)
+    if len(data)>limit: raise ReleaseError("Respuesta del repositorio demasiado grande.")
+    return data
+def _verify_repository(work,status=None):
+    import re, shutil, subprocess
+    for command in ("gpg","gpgv"):
+        if not shutil.which(command): raise ReleaseError("Falta %s. No se puede verificar el repositorio."%command)
+    if status: status("Descargando clave e índice firmado de Anthropic…")
+    key=work/"anthropic-key.asc"; signed=work/"InRelease"; verified=work/"Release.verified"
+    key.write_bytes(_read_url(KEY_URL,262144))
+    signed.write_bytes(_read_url(BASE_URL+"/dists/stable/InRelease",2*1024*1024))
+    shown=subprocess.run(["gpg","--show-keys","--with-colons",str(key)],capture_output=True,text=True,timeout=20)
+    fingerprints=re.findall(r"^fpr:::::::::([0-9A-F]+):?$",shown.stdout,re.M)
+    if shown.returncode or EXPECTED_FINGERPRINT not in fingerprints:
+        raise ReleaseError("La huella de la clave de Anthropic no coincide. Descarga cancelada.")
+    keyring=work/"anthropic-keyring.gpg"
+    converted=subprocess.run(["gpg","--batch","--yes","--dearmor","--output",str(keyring),str(key)],capture_output=True,text=True,timeout=20)
+    if converted.returncode: raise ReleaseError("No se pudo preparar la clave oficial.")
+    check=subprocess.run(["gpgv","--output",str(verified),"--keyring",str(keyring),str(signed)],capture_output=True,text=True,timeout=30)
+    if check.returncode: raise ReleaseError("Firma de Anthropic no válida: "+(check.stderr or "")[-800:])
+    return verified.read_text(encoding="utf-8",errors="replace")
+def _index_digest(release_text,relative_path):
+    inside=False
+    for line in release_text.splitlines():
+        if line.strip()=="SHA256:": inside=True; continue
+        if inside:
+            if not line.startswith(" "): break
+            parts=line.split()
+            if len(parts)==3 and parts[2]==relative_path:
+                if re.fullmatch(r"[0-9a-fA-F]{64}",parts[0]): return parts[0].lower()
+                break
+    raise ReleaseError("El manifiesto firmado no contiene el SHA-256 del índice Packages.")
+def _parse_package(index,arch):
+    matches=[]
+    for stanza in re.split(r"\n\s*\n",index.strip()):
+        fields={}
+        for line in stanza.splitlines():
+            if line and not line[0].isspace() and ":" in line:
+                key,value=line.split(":",1); fields[key]=value.strip()
+        if fields.get("Package")=="claude-desktop" and fields.get("Architecture")==arch: matches.append(fields)
+    if not matches: raise ReleaseError("Anthropic no publica Claude Desktop para %s."%arch)
+    item=matches[-1]
+    for key in ("Version","Filename","SHA256","Size"):
+        if key not in item: raise ReleaseError("Falta el campo %s en el índice oficial."%key)
+    if not re.fullmatch(r"[0-9a-fA-F]{64}",item["SHA256"]) or not item["Size"].isdigit():
+        raise ReleaseError("Metadatos de integridad/tamaño no válidos.")
+    size=int(item["Size"])
+    if size<=0 or size>MAX_PACKAGE_BYTES: raise ReleaseError("Tamaño del paquete fuera de límites.")
+    filename=item["Filename"]
+    if filename.startswith("/") or ".." in Path(filename).parts: raise ReleaseError("Ruta del paquete no válida.")
+    return item
+def get_latest_package(work,status=None):
+    import hashlib
+    arch=architecture(); release=_verify_repository(work,status)
+    relative="main/binary-%s/Packages"%arch
+    if status: status("Verificando índice Packages con el manifiesto firmado…")
+    index=_read_url(BASE_URL+"/dists/stable/"+relative,MAX_INDEX_BYTES)
+    if hashlib.sha256(index).hexdigest()!=_index_digest(release,relative):
+        raise ReleaseError("El índice Packages no coincide con el SHA-256 del manifiesto firmado.")
+    item=_parse_package(index.decode("utf-8",errors="replace"),arch)
+    return PackageInfo(item["Version"],arch,item["Filename"],item["SHA256"].lower(),int(item["Size"]),BASE_URL+"/"+item["Filename"])
+def download_verified(package,destination,progress=None):
+    import hashlib
+    destination.parent.mkdir(parents=True,exist_ok=True); temporary=destination.with_suffix(destination.suffix+".part")
+    digest=hashlib.sha256(); received=0
     try:
-        with _request(RELEASE_API) as response:
-            release = json.loads(response.read(2 * 1024 * 1024).decode("utf-8"))
-    except Exception as exc:
-        raise ReleaseError("No se pudo consultar la última versión en GitHub: %s" % exc)
-
-    tag = release.get("tag_name")
-    if not isinstance(tag, str) or not tag:
-        raise ReleaseError("La respuesta de GitHub no contiene una versión válida.")
-
-    expected_suffix = "-%s.AppImage" % arch
-    candidates = [
-        asset for asset in release.get("assets", [])
-        if isinstance(asset.get("name"), str)
-        and asset["name"].endswith(expected_suffix)
-        and asset["name"].startswith("claude-desktop-unofficial-")
-        and isinstance(asset.get("digest"), str)
-        and re.fullmatch(r"sha256:[0-9a-fA-F]{64}", asset["digest"])
-    ]
-    if len(candidates) != 1:
-        raise ReleaseError("No se encontró un único AppImage verificable para %s." % arch)
-
-    asset = candidates[0]
-    size = int(asset.get("size") or 0)
-    url = asset.get("browser_download_url")
-    if not url or not url.startswith(
-        "https://github.com/aaddrick/claude-desktop-debian/releases/download/"
-    ):
-        raise ReleaseError("La URL de descarga no pertenece al repositorio esperado.")
-    if size <= 0 or size > MAX_DOWNLOAD_BYTES:
-        raise ReleaseError("El tamaño publicado del archivo no es válido.")
-    return ReleaseAsset(
-        version=tag,
-        name=asset["name"],
-        url=url,
-        sha256=asset["digest"].split(":", 1)[1].lower(),
-        size=size,
-    )
-
-
-def download_verified(asset: ReleaseAsset, destination: Path, progress=None) -> Path:
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_suffix(destination.suffix + ".part")
-    digest = hashlib.sha256()
-    received = 0
-    try:
-        with _request(asset.url, timeout=60) as response, temporary.open("wb") as output:
+        with _request(package.url,90) as response,temporary.open("wb") as output:
             while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                received += len(chunk)
-                if received > MAX_DOWNLOAD_BYTES or received > asset.size:
-                    raise ReleaseError("La descarga supera el tamaño publicado.")
-                output.write(chunk)
-                digest.update(chunk)
-                if progress:
-                    progress(received, asset.size)
-        if received != asset.size:
-            raise ReleaseError("La descarga está incompleta (%d de %d bytes)." % (received, asset.size))
-        actual = digest.hexdigest()
-        if actual != asset.sha256:
-            raise ReleaseError("La huella SHA-256 no coincide. El archivo se ha rechazado.")
-        temporary.replace(destination)
-        destination.chmod(0o700)
-        return destination
+                chunk=response.read(1024*1024)
+                if not chunk: break
+                received+=len(chunk)
+                if received>package.size or received>MAX_PACKAGE_BYTES: raise ReleaseError("La descarga supera el tamaño publicado.")
+                output.write(chunk); digest.update(chunk)
+                if progress: progress(received,package.size)
+        if received!=package.size: raise ReleaseError("Descarga incompleta: %d de %d bytes."%(received,package.size))
+        if digest.hexdigest()!=package.sha256: raise ReleaseError("El SHA-256 del paquete no coincide con el índice firmado.")
+        temporary.replace(destination); destination.chmod(0o600); return destination
     except Exception:
-        try:
-            temporary.unlink()
-        except OSError:
-            pass
+        try: temporary.unlink()
+        except OSError: pass
         raise
-
-
-def has_extractor() -> bool:
-    return shutil.which("tar") is not None

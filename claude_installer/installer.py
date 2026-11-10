@@ -24,7 +24,7 @@ def repair_access():
     WRAPPER.parent.mkdir(parents=True,exist_ok=True)
     content='''#!/bin/sh
 APP="$HOME/.local/opt/claude-desktop/usr/lib/claude-desktop"
-export LD_LIBRARY_PATH="$APP:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$APP"
 exec "$APP/claude-desktop" "$@"
 '''
     temp=WRAPPER.with_suffix(".tmp"); temp.write_text(content,encoding="utf-8"); temp.chmod(0o700); temp.replace(WRAPPER)

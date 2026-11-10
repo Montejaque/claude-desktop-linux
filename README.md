@@ -1,57 +1,39 @@
-# Claude Desktop Linux Installer
+# Claude Desktop Installer para Linux
 
-Instalador gráfico independiente para instalar Claude Desktop en el perfil del usuario Linux, sin permisos root.
+Instalador gráfico independiente para **Claude Desktop oficial de Anthropic**. Descarga el paquete DEB desde el repositorio APT oficial, verifica la firma GPG del manifiesto, el SHA-256 del índice y el SHA-256 del paquete y lo extrae en el perfil del usuario, sin sudo.
 
-> **Importante:** la vía incluida para Ubuntu 20.04 utiliza un AppImage comunitario no oficial. No está respaldada por Anthropic. El paquete se descarga desde GitHub Releases y se valida con el SHA-256 publicado para ese asset.
+Desarrollado por **José Miguel Leotte · La Central Digital**.
 
 ## Funciones
+- Interfaz en español siguiendo la línea visual de los instaladores de VS Code y Codex: blanco, acento amarillo, estado, progreso y registro.
+- Verificación de la huella de la clave de Anthropic, firma InRelease, hash del índice Packages y hash del DEB.
+- Instalación y actualización en ~/.local/opt/claude-desktop.
+- Lanzador GNOME, icono y asociación del protocolo claude://.
+- Reparación de acceso, comprobación de versión y desinstalación no destructiva.
+- AppImage del instalador, documentación técnica y guía de ayuda PDF/Markdown.
 
-- Interfaz gráfica en español, con tema oscuro y acento amarillo.
-- Detecta distribución, arquitectura, kernel, sesión gráfica y glibc.
-- Descarga la última versión comunitaria publicada para amd64 o arm64.
-- Comprueba URL de origen, tamaño y SHA-256 antes de extraer el archivo.
-- Instala solo en `~/.local/opt`.
-- Crea lanzador de Claude en el menú GNOME y copia el icono incluido en el paquete.
-- Permite abrir, actualizar y desinstalar.
-- Conserva la configuración personal de Claude al desinstalar.
-- No utiliza sudo, no instala paquetes del sistema y no modifica glibc.
+## Compatibilidad
+El paquete oficial consultado declara libc6 >= 2.34. Ubuntu 20.04 normalmente incorpora glibc 2.31 y queda fuera de ese requisito. El instalador avisa y permite continuar bajo responsabilidad del usuario, sin modificar glibc ni bibliotecas del sistema. En el equipo de pruebas de Montejaque, el paquete oficial se extrajo y abrió en Ubuntu 20.04; esto no equivale a soporte oficial ni garantiza futuras versiones.
 
-## Requisitos
+## Ejecutar desde código
+\`\`\`bash
+python3 -m claude_installer.app
+\`\`\`
+Requisitos: Python 3.8+, Tkinter, gpg, gpgv y dpkg-deb.
 
-- Linux x86_64 o ARM64.
-- Python 3 y Tkinter.
-- Conexión HTTPS a GitHub.
-- Espacio libre de varios cientos de MB para descargar y extraer la aplicación.
-
-## Ejecutar
-
-```bash
-bash scripts/run-local.sh
-```
-
-Para crear un comando de usuario:
-
-```bash
-bash scripts/install-launcher.sh
-```
-
-Después ejecuta:
-
-```bash
-~/.local/bin/claude-desktop-installer
-```
-
-## Fuente del paquete comunitario
-
-- Proyecto: https://github.com/aaddrick/claude-desktop-debian
-- Última release: https://github.com/aaddrick/claude-desktop-debian/releases/latest
-
-Este proyecto de Montejaque no mantiene ni firma el AppImage. Se verifica su SHA-256 contra el digest publicado por GitHub para el asset de la release consultada.
-
-## Compatibilidad oficial
-
-Anthropic documenta Linux beta para Ubuntu 22.04 LTS o posterior y Debian 12 o posterior, en x64 y arm64. Ubuntu 20.04 no está en esa lista. Por eso el instalador no intenta forzar el paquete oficial ni sustituir bibliotecas del sistema.
+## Construir AppImage
+Consulta docs/BUILD_APPIMAGE.md. La AppImage contiene el instalador; Claude Desktop se descarga directamente de Anthropic al instalar.
 
 ## Documentación
+- docs/GUIA_USUARIO.md
+- docs/INSTALACION.md
+- docs/BUILD_APPIMAGE.md
+- SECURITY.md
 
-Consulta [docs/INSTALLATION.md](docs/INSTALLATION.md) y [SECURITY.md](SECURITY.md).
+## Desarrollador y contacto
+**José Miguel Leotte** · **La Central Digital**  
+Teléfono: +34 617 92 57 68  
+Correo: info@lacentraldigital.es  
+Web: https://lacentraldigital.es
+
+Claude y Anthropic son marcas de sus titulares. Este instalador es independiente y no está afiliado, patrocinado ni certificado por Anthropic.

@@ -1,149 +1,91 @@
-"""Per-user install, launch and uninstall operations for the community AppImage."""
+"""Official Anthropic Claude Desktop per-user installation."""
 from __future__ import annotations
-
-import os
-import shutil
-import subprocess
-import tempfile
+import os,shutil,subprocess,tempfile
 from pathlib import Path
-from typing import Optional
-
-from .release_source import ReleaseAsset, download_verified, get_latest_asset
-
-APP_ID = "claude-desktop-unofficial"
-APP_NAME = "Claude Desktop (versión comunitaria)"
-INSTALL_DIR = Path.home() / ".local" / "opt" / APP_ID
-APPLICATIONS_DIR = Path.home() / ".local" / "share" / "applications"
-DESKTOP_FILE = APPLICATIONS_DIR / (APP_ID + ".desktop")
-ICON_DIR = Path.home() / ".local" / "share" / "icons" / "hicolor" / "256x256" / "apps"
-ICON_FILE = ICON_DIR / (APP_ID + ".png")
-
-
-class InstallError(RuntimeError):
-    pass
-
-
-def is_installed() -> bool:
-    return (INSTALL_DIR / "AppRun").is_file() and DESKTOP_FILE.is_file()
-
-
-def installed_version() -> Optional[str]:
-    version_file = INSTALL_DIR / "INSTALLER_VERSION"
-    try:
-        return version_file.read_text(encoding="utf-8").strip()
-    except OSError:
-        return None
-
-
-def _copy_icon(extracted: Path) -> None:
-    candidates = []
-    for path in extracted.rglob("*"):
-        if path.is_file() and path.suffix.lower() in (".png", ".svg"):
-            low = path.name.lower()
-            if "claude" in low or "icon" in low:
-                candidates.append(path)
-    pngs = [p for p in candidates if p.suffix.lower() == ".png"]
-    if pngs:
-        ICON_DIR.mkdir(parents=True, exist_ok=True)
-        # Prefer the largest hicolor icon where a size is encoded in the path.
-        selected = sorted(pngs, key=lambda p: (("256x256" in str(p)), p.stat().st_size))[-1]
-        shutil.copy2(selected, ICON_FILE)
-    else:
-        raise InstallError("El paquete no contiene un icono PNG de Claude reconocible; no se ha creado el lanzador.")
-
-
-def _write_desktop_file() -> None:
-    APPLICATIONS_DIR.mkdir(parents=True, exist_ok=True)
-    app_run = INSTALL_DIR / "AppRun"
-    content = """[Desktop Entry]
+from .release_source import ReleaseError,download_verified,get_latest_package
+APP_ID="claude-desktop"
+INSTALL_DIR=Path.home()/".local/opt"/APP_ID
+WRAPPER=Path.home()/".local/bin/claude-desktop-oficial"
+APPLICATIONS=Path.home()/".local/share/applications"
+DESKTOP=APPLICATIONS/"claude-desktop.desktop"
+ICON_DIR=Path.home()/".local/share/icons/hicolor/256x256/apps"
+ICON=ICON_DIR/"claude-desktop.png"
+CACHE=Path.home()/".cache/claude-desktop-installer"
+class InstallError(RuntimeError): pass
+def is_installed(): return (INSTALL_DIR/"usr/lib/claude-desktop/claude-desktop").is_file()
+def installed_version():
+    try: return (INSTALL_DIR/"INSTALLER_VERSION").read_text(encoding="utf-8").strip()
+    except OSError: return None
+def _optional(command):
+    try: subprocess.run(command,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15,check=False)
+    except (OSError,subprocess.SubprocessError): pass
+def repair_access():
+    if not is_installed(): raise InstallError("Claude Desktop no está instalado.")
+    WRAPPER.parent.mkdir(parents=True,exist_ok=True)
+    content='''#!/bin/sh
+APP="$HOME/.local/opt/claude-desktop/usr/lib/claude-desktop"
+export LD_LIBRARY_PATH="$APP"
+exec "$APP/claude-desktop" "$@"
+'''
+    temp=WRAPPER.with_suffix(".tmp"); temp.write_text(content,encoding="utf-8"); temp.chmod(0o700); temp.replace(WRAPPER)
+    source=INSTALL_DIR/"usr/share/icons/hicolor/256x256/apps/claude-desktop.png"
+    if not source.is_file(): source=INSTALL_DIR/"usr/share/icons/hicolor/128x128/apps/claude-desktop.png"
+    if source.is_file(): ICON_DIR.mkdir(parents=True,exist_ok=True); shutil.copy2(source,ICON)
+    APPLICATIONS.mkdir(parents=True,exist_ok=True)
+    desktop="""[Desktop Entry]
+Version=1.0
 Type=Application
-Name=Claude Desktop (versión comunitaria)
-Comment=Aplicación de escritorio de Claude — paquete comunitario no oficial
-Exec="{app_run}"
-Path="{workdir}"
-Icon={icon}
+Name=Claude
+Comment=Claude Desktop oficial de Anthropic
+Exec={wrapper} %U
+Icon=claude-desktop
 Terminal=false
-Categories=Office;Utility;
+Categories=Office;Utility;Development;
 StartupNotify=true
-""".format(app_run=app_run, workdir=INSTALL_DIR, icon=APP_ID)
-    temporary = DESKTOP_FILE.with_suffix(".desktop.tmp")
-    temporary.write_text(content, encoding="utf-8")
-    temporary.chmod(0o644)
-    temporary.replace(DESKTOP_FILE)
-
-
-def install_latest(progress=None, status=None) -> str:
-    asset = get_latest_asset()
-    if status:
-        status("Versión detectada: %s. Descargando y verificando SHA-256…" % asset.version)
-
-    cache_dir = Path.home() / ".cache" / APP_ID
-    package = cache_dir / asset.name
-    download_verified(asset, package, progress=progress)
-
-    if status:
-        status("Integridad verificada. Extrayendo la aplicación…")
-
-    INSTALL_DIR.parent.mkdir(parents=True, exist_ok=True)
-    stage_parent = INSTALL_DIR.parent
-    staging = Path(tempfile.mkdtemp(prefix=".claude-stage-", dir=str(stage_parent)))
+StartupWMClass=com.anthropic.Claude
+MimeType=x-scheme-handler/claude;
+""".format(wrapper=WRAPPER)
+    temp=DESKTOP.with_suffix(".desktop.tmp"); temp.write_text(desktop,encoding="utf-8"); temp.chmod(0o644); temp.replace(DESKTOP)
+    _optional(["update-desktop-database",str(APPLICATIONS)])
+    _optional(["xdg-mime","default",DESKTOP.name,"x-scheme-handler/claude"])
+def install_latest(progress=None,status=None):
+    if not shutil.which("dpkg-deb"): raise InstallError("Falta dpkg-deb. No se ha modificado el sistema.")
+    with tempfile.TemporaryDirectory(prefix="claude-verify-") as temp:
+        try: package=get_latest_package(Path(temp),status=status)
+        except ReleaseError as exc: raise InstallError(str(exc))
+    if status: status("Versión oficial %s detectada. Descargando y verificando…"%package.version)
+    archive=CACHE/("claude-desktop_%s_%s.deb"%(package.version,package.architecture))
+    try: download_verified(package,archive,progress)
+    except ReleaseError as exc: raise InstallError(str(exc))
+    parent=INSTALL_DIR.parent; parent.mkdir(parents=True,exist_ok=True)
+    staging=Path(tempfile.mkdtemp(prefix=".claude-stage-",dir=str(parent))); extracted=staging/"package"; extracted.mkdir()
     try:
-        result = subprocess.run(
-            [str(package), "--appimage-extract"],
-            cwd=str(staging),
-            env=dict(os.environ, APPIMAGE_EXTRACT_AND_RUN="1"),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            timeout=240,
-        )
-        extracted = staging / "squashfs-root"
-        if result.returncode != 0 or not (extracted / "AppRun").is_file():
-            tail = (result.stdout or "")[-1800:]
-            raise InstallError("No se pudo extraer el AppImage. %s" % tail)
-
-        backup = INSTALL_DIR.with_name(INSTALL_DIR.name + ".previous")
-        if backup.exists():
-            shutil.rmtree(backup)
-        if INSTALL_DIR.exists():
-            INSTALL_DIR.rename(backup)
+        if status: status("SHA-256 correcto. Extrayendo paquete oficial…")
+        result=subprocess.run(["dpkg-deb","-x",str(archive),str(extracted)],capture_output=True,text=True,timeout=180)
+        if result.returncode or not (extracted/"usr/lib/claude-desktop/claude-desktop").is_file():
+            raise InstallError("No se pudo extraer el paquete: "+(result.stderr or "")[-1000:])
+        (extracted/"INSTALLER_VERSION").write_text(package.version+"\n",encoding="utf-8")
+        backup=INSTALL_DIR.with_name(INSTALL_DIR.name+".previous")
+        if backup.exists(): shutil.rmtree(backup)
+        if INSTALL_DIR.exists(): INSTALL_DIR.rename(backup)
         try:
-            shutil.copytree(extracted, INSTALL_DIR, symlinks=True)
-            (INSTALL_DIR / "INSTALLER_VERSION").write_text(asset.version + "\n", encoding="utf-8")
-            _copy_icon(INSTALL_DIR)
-            _write_desktop_file()
+            extracted.rename(INSTALL_DIR); repair_access()
         except Exception:
-            if INSTALL_DIR.exists():
-                shutil.rmtree(INSTALL_DIR)
-            if backup.exists():
-                backup.rename(INSTALL_DIR)
+            if INSTALL_DIR.exists(): shutil.rmtree(INSTALL_DIR)
+            if backup.exists(): backup.rename(INSTALL_DIR); repair_access()
             raise
-        if backup.exists():
-            shutil.rmtree(backup)
-        return asset.version
-    finally:
-        shutil.rmtree(staging, ignore_errors=True)
-
-
-def launch() -> None:
-    app_run = INSTALL_DIR / "AppRun"
-    if not app_run.is_file():
-        raise InstallError("Claude Desktop no está instalado.")
-    env = os.environ.copy()
-    env.setdefault("ELECTRON_DISABLE_SECURITY_WARNINGS", "true")
-    subprocess.Popen([str(app_run)], cwd=str(INSTALL_DIR), env=env, start_new_session=True)
-
-
-def uninstall() -> None:
-    if INSTALL_DIR.exists():
-        shutil.rmtree(INSTALL_DIR)
-    for path in (DESKTOP_FILE, ICON_FILE):
-        try:
-            path.unlink()
-        except FileNotFoundError:
-            pass
-    for directory in (ICON_DIR, ICON_DIR.parent, ICON_DIR.parent.parent):
-        try:
-            directory.rmdir()
-        except OSError:
-            pass
+        if backup.exists(): shutil.rmtree(backup)
+        return package.version
+    finally: shutil.rmtree(staging,ignore_errors=True)
+def check_latest(status=None):
+    with tempfile.TemporaryDirectory(prefix="claude-check-") as temp: return get_latest_package(Path(temp),status=status)
+def launch():
+    if not is_installed(): raise InstallError("Claude Desktop no está instalado.")
+    repair_access()
+    subprocess.Popen([str(WRAPPER)],cwd=str(INSTALL_DIR),env=os.environ.copy(),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
+def uninstall():
+    if INSTALL_DIR.exists(): shutil.rmtree(INSTALL_DIR)
+    for path in (DESKTOP,WRAPPER,ICON):
+        try: path.unlink()
+        except FileNotFoundError: pass
+    _optional(["update-desktop-database",str(APPLICATIONS)])

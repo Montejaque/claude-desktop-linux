@@ -1,0 +1,49 @@
+name: Tests and AppImage
+on:
+  push:
+    branches: [main, official-anthropic-installer]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  tests:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+  appimage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build in Ubuntu 20.04 container
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/work" -w /work ubuntu:20.04 bash -lc '
+            apt-get update &&
+            DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-pip python3-tk curl file libfuse2 libglib2.0-0 libx11-6 libxext6 libxrender1 libxtst6 libxi6 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 &&
+            python3 -m pip install "pip==24.3.1" &&
+            python3 -m pip install "pyinstaller==6.11.1" "reportlab==4.2.5" &&
+            bash scripts/build-appimage.sh &&
+            python3 scripts/build-help-pdf.py
+          '
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          retention-days: 1
+          name: Claude-Desktop-Installer-Linux
+          path: |
+            dist/*.AppImage
+            dist/*.pdf
+      - name: Publish release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.AppImage
+            dist/*.pdf

@@ -1,15 +1,15 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-desktop-linux-installer"
-version = "0.2.0"
-description = "Per-user graphical installer for the community Claude Desktop AppImage on Linux"
+version = "1.0.0"
+description = "Per-user installer for official Anthropic Claude Desktop on Linux"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "Proprietary - license to be decided" }
-authors = [{ name = "Montejaque" }]
+license = { text = "MIT" }
+authors = [{ name = "José Miguel Leotte - La Central Digital", email = "info@lacentraldigital.es" }]
 dependencies = []
 
 [project.scripts]

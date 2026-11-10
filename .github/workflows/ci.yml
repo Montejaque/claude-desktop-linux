@@ -1,51 +1,92 @@
 name: Tests and AppImage
+
 on:
   push:
     branches: [main, official-anthropic-installer]
     tags: ["v*"]
   pull_request:
+    branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: write
+
+concurrency:
+  group: claude-installer-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   tests:
+    name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.8", "3.10", "3.12"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
+
   appimage:
+    name: Build Linux AppImage
+    needs: tests
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Build in Ubuntu 20.04 container
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build AppImage and PDF in Ubuntu 20.04 container
         run: |
-          docker run --rm -v "$GITHUB_WORKSPACE:/work" -w /work ubuntu:20.04 bash -lc '
-            apt-get update &&
-            DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-pip python3-tk curl file libfuse2 libglib2.0-0 libx11-6 libxext6 libxrender1 libxtst6 libxi6 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 &&
-            python3 -m pip install "pip==24.3.1" &&
-            python3 -m pip install "pyinstaller==6.11.1" "reportlab==4.2.5" &&
-            bash scripts/build-appimage.sh &&
-            python3 scripts/build-help-pdf.py
-          '
-      - uses: actions/upload-artifact@v4
-        continue-on-error: true
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}:/work" \
+            -w /work \
+            ubuntu:20.04 \
+            bash -Eeuo pipefail -c '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                python3 python3-pip python3-tk curl ca-certificates file \
+                libfuse2 libglib2.0-0 libx11-6 libxext6 libxrender1 \
+                libxtst6 libxi6 libxrandr2 libxss1 libxcursor1 \
+                libxcomposite1 libasound2 libatk1.0-0 \
+                libatk-bridge2.0-0 libgtk-3-0
+              python3 -m pip install --no-cache-dir "pip==24.3.1"
+              python3 -m pip install --no-cache-dir \
+                "pyinstaller==6.11.1" "reportlab==4.2.5"
+              bash scripts/build-appimage.sh
+              python3 scripts/build-help-pdf.py
+              test -s dist/Claude-Desktop-Installer-x86_64.AppImage
+              test -s dist/Guia-Ayuda-Claude-Desktop-Punto-Vuela-Montejaque-v1.0.1.pdf
+              file dist/Claude-Desktop-Installer-x86_64.AppImage
+              chmod +x dist/Claude-Desktop-Installer-x86_64.AppImage
+            '
+
+      - name: Upload AppImage and PDF artifact
+        uses: actions/upload-artifact@v4
         with:
-          retention-days: 1
-          name: Claude-Desktop-Installer-Linux
+          name: Claude-Desktop-Installer-Linux-${{ github.sha }}
           path: |
-            dist/*.AppImage
+            dist/Claude-Desktop-Installer-x86_64.AppImage
             dist/*.pdf
-      - name: Publish release assets
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release assets
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          name: Claude Desktop Installer ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
-            dist/*.AppImage
+            dist/Claude-Desktop-Installer-x86_64.AppImage
             dist/*.pdf

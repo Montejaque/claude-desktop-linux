@@ -14,13 +14,13 @@ Huella fijada: 31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE
 Cadena de verificación: huella de clave -> firma InRelease -> SHA-256 de Packages -> SHA-256 del DEB. Si falla una comprobación, no se extrae el paquete.
 
 ## Rutas
-- Aplicación: ~/.local/opt/claude-desktop-official
-- Wrapper: ~/.local/bin/claude-desktop-official
-- Lanzador: ~/.local/share/applications/claude-desktop-official.desktop
-- Icono: ~/.local/share/icons/hicolor/256x256/apps/claude-desktop-official.png
-- Caché: ~/.cache/claude-desktop-official
+- Aplicación: ~/.local/opt/claude-desktop (compatible con la instalación manual de prueba).
+- Wrapper: ~/.local/bin/claude-desktop-oficial
+- Lanzador: ~/.local/share/applications/claude-desktop.desktop
+- Icono: ~/.local/share/icons/hicolor/256x256/apps/claude-desktop.png
+- Caché: ~/.cache/claude-desktop-installer
 
-La configuración personal de Claude no se gestiona ni se elimina.
+La configuración personal de Claude no se gestiona ni se elimina. La actualización reutiliza la ruta de la instalación que ya se probó en el equipo.
 
 ## Desarrollo
 \`\`\`bash

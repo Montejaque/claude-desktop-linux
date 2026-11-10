@@ -10,27 +10,33 @@ permissions:
 
 jobs:
   build:
-    name: Build AppImage (Ubuntu 20.04)
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Build in Ubuntu 20.04 container
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install build dependencies
         run: |
-          docker run --rm -v "${GITHUB_WORKSPACE}:/work" -w /work ubuntu:20.04 bash -Eeuo pipefail -c '
-            export DEBIAN_FRONTEND=noninteractive
-            apt-get update
-            apt-get install -y --no-install-recommends python3 python3-pip python3-tk curl ca-certificates file libfuse2 libglib2.0-0 libx11-6 libxext6 libxrender1 libxtst6 libxi6 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0
-            python3 -m pip install --no-cache-dir "pip==24.3.1"
-            python3 -m pip install --no-cache-dir "pyinstaller==6.11.1" "reportlab==4.2.5"
-            python3 -m unittest discover -s tests -v
-            bash scripts/build-appimage.sh
-            python3 scripts/build-help-pdf.py
-            test -s dist/Claude-Desktop-Installer-x86_64.AppImage
-            test -s dist/Guia-Ayuda-Claude-Desktop.pdf
-            file dist/Claude-Desktop-Installer-x86_64.AppImage
-          '
+          sudo apt-get update
+          sudo apt-get install -y python3-tk curl ca-certificates file libfuse2
+          python -m pip install --upgrade "pip<25"
+          python -m pip install "pyinstaller==6.11.1" "reportlab==4.2.5"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build AppImage
+        run: |
+          bash scripts/build-appimage.sh
+          python scripts/build-help-pdf.py
+          test -s dist/Claude-Desktop-Installer-x86_64.AppImage
+          test -s dist/Guia-Ayuda-Claude-Desktop.pdf
+          file dist/Claude-Desktop-Installer-x86_64.AppImage
 
       - name: Upload AppImage and PDF
         uses: actions/upload-artifact@v4
@@ -42,7 +48,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Create or update GitHub Release v1.0.1
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.1

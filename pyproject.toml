@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-desktop-linux-installer"
-version = "1.0.0"
+version = "1.0.1"
 description = "Per-user installer for official Anthropic Claude Desktop on Linux"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
-authors = [{ name = "José Miguel Leotte - La Central Digital", email = "info@lacentraldigital.es" }]
+authors = [{ name = "Francisco Javier Gallego Orellana - Punto Vuela Montejaque", email = "montejaque@puntosvuela.es" }]
 dependencies = []
 
 [project.scripts]

@@ -3,14 +3,14 @@ from __future__ import annotations
 import os,shutil,subprocess,tempfile
 from pathlib import Path
 from .release_source import ReleaseError,download_verified,get_latest_package
-APP_ID="claude-desktop-official"
+APP_ID="claude-desktop"
 INSTALL_DIR=Path.home()/".local/opt"/APP_ID
-WRAPPER=Path.home()/".local/bin/claude-desktop-official"
+WRAPPER=Path.home()/".local/bin/claude-desktop-oficial"
 APPLICATIONS=Path.home()/".local/share/applications"
-DESKTOP=APPLICATIONS/(APP_ID+".desktop")
+DESKTOP=APPLICATIONS/"claude-desktop.desktop"
 ICON_DIR=Path.home()/".local/share/icons/hicolor/256x256/apps"
-ICON=ICON_DIR/(APP_ID+".png")
-CACHE=Path.home()/".cache"/APP_ID
+ICON=ICON_DIR/"claude-desktop.png"
+CACHE=Path.home()/".cache/claude-desktop-installer"
 class InstallError(RuntimeError): pass
 def is_installed(): return (INSTALL_DIR/"usr/lib/claude-desktop/claude-desktop").is_file()
 def installed_version():
@@ -23,7 +23,7 @@ def repair_access():
     if not is_installed(): raise InstallError("Claude Desktop no está instalado.")
     WRAPPER.parent.mkdir(parents=True,exist_ok=True)
     content='''#!/bin/sh
-APP="$HOME/.local/opt/claude-desktop-official/usr/lib/claude-desktop"
+APP="$HOME/.local/opt/claude-desktop/usr/lib/claude-desktop"
 export LD_LIBRARY_PATH="$APP:$LD_LIBRARY_PATH"
 exec "$APP/claude-desktop" "$@"
 '''
@@ -38,13 +38,13 @@ Type=Application
 Name=Claude
 Comment=Claude Desktop oficial de Anthropic
 Exec={wrapper} %U
-Icon={icon}
+Icon=claude-desktop
 Terminal=false
 Categories=Office;Utility;Development;
 StartupNotify=true
 StartupWMClass=com.anthropic.Claude
 MimeType=x-scheme-handler/claude;
-""".format(wrapper=WRAPPER,icon=APP_ID)
+""".format(wrapper=WRAPPER)
     temp=DESKTOP.with_suffix(".desktop.tmp"); temp.write_text(desktop,encoding="utf-8"); temp.chmod(0o644); temp.replace(DESKTOP)
     _optional(["update-desktop-database",str(APPLICATIONS)])
     _optional(["xdg-mime","default",DESKTOP.name,"x-scheme-handler/claude"])

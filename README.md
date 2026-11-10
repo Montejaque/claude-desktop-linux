@@ -5,15 +5,15 @@ Instalador gráfico independiente para **Claude Desktop oficial de Anthropic**. 
 Desarrollado por **José Miguel Leotte · La Central Digital**.
 
 ## Funciones
-- Interfaz en español con la misma línea visual de los instaladores de VS Code y Codex: blanco, acento amarillo, estado, progreso y registro.
-- Verificación de la huella de la clave de Anthropic, firma de InRelease, hash del índice Packages y hash del DEB.
-- Instalación y actualización en ~/.local/opt/claude-desktop-official.
+- Interfaz en español siguiendo la línea visual de los instaladores de VS Code y Codex: blanco, acento amarillo, estado, progreso y registro.
+- Verificación de la huella de la clave de Anthropic, firma InRelease, hash del índice Packages y hash del DEB.
+- Instalación y actualización en ~/.local/opt/claude-desktop.
 - Lanzador GNOME, icono y asociación del protocolo claude://.
 - Reparación de acceso, comprobación de versión y desinstalación no destructiva.
-- AppImage del instalador y guía de ayuda.
+- AppImage del instalador, documentación técnica y guía de ayuda PDF/Markdown.
 
 ## Compatibilidad
-El paquete oficial consultado declara libc6 >= 2.34. Ubuntu 20.04 normalmente incorpora glibc 2.31 y queda fuera de ese requisito. El instalador avisa y permite continuar bajo responsabilidad del usuario, sin modificar glibc ni bibliotecas del sistema. En el equipo de pruebas de Montejaque se comprobó que el paquete oficial se podía extraer y abrir en Ubuntu 20.04; esto no equivale a soporte oficial ni garantiza futuras versiones.
+El paquete oficial consultado declara libc6 >= 2.34. Ubuntu 20.04 normalmente incorpora glibc 2.31 y queda fuera de ese requisito. El instalador avisa y permite continuar bajo responsabilidad del usuario, sin modificar glibc ni bibliotecas del sistema. En el equipo de pruebas de Montejaque, el paquete oficial se extrajo y abrió en Ubuntu 20.04; esto no equivale a soporte oficial ni garantiza futuras versiones.
 
 ## Ejecutar desde código
 \`\`\`bash

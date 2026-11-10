@@ -35,5 +35,7 @@ EOF
 cp AppDir/claude-desktop-installer.desktop AppDir/usr/share/applications/
 ln -sf usr/share/icons/hicolor/scalable/apps/claude-desktop-installer.svg AppDir/claude-desktop-installer.svg
 APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGETOOL" AppDir dist/Claude-Desktop-Installer-x86_64.AppImage
+test -s dist/Claude-Desktop-Installer-x86_64.AppImage
+file dist/Claude-Desktop-Installer-x86_64.AppImage
 chmod +x dist/Claude-Desktop-Installer-x86_64.AppImage
 echo "Creada dist/Claude-Desktop-Installer-x86_64.AppImage"

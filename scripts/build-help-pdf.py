@@ -16,13 +16,13 @@ def xml(text):
     return text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
 def build():
     OUT.parent.mkdir(parents=True,exist_ok=True)
-    doc=SimpleDocTemplate(str(OUT),pagesize=A4,rightMargin=19*mm,leftMargin=19*mm,topMargin=22*mm,bottomMargin=20*mm,title="Guía de ayuda · Claude Desktop Installer",author="José Miguel Leotte · La Central Digital")
+    doc=SimpleDocTemplate(str(OUT),pagesize=A4,rightMargin=19*mm,leftMargin=19*mm,topMargin=22*mm,bottomMargin=20*mm,title="Guía de ayuda · Claude Desktop Installer · Versión 1.0.1",author="Francisco Javier Gallego Orellana · Punto Vuela Montejaque")
     styles=getSampleStyleSheet()
     styles.add(ParagraphStyle(name="BrandTitle",parent=styles["Title"],fontName="Helvetica-Bold",fontSize=22,leading=27,textColor=DARK,alignment=TA_LEFT,spaceAfter=5))
     styles.add(ParagraphStyle(name="Sub",parent=styles["Normal"],fontSize=9,textColor=GREY,leading=13,spaceAfter=10))
     styles.add(ParagraphStyle(name="H2x",parent=styles["Heading2"],fontName="Helvetica-Bold",fontSize=13,leading=17,textColor=DARK,spaceBefore=12,spaceAfter=6))
     styles.add(ParagraphStyle(name="Bodyx",parent=styles["BodyText"],fontName="Helvetica",fontSize=9,leading=13,textColor=DARK,spaceAfter=6))
-    story=[Paragraph("CLAUDE DESKTOP",styles["BrandTitle"]),Paragraph("GUÍA DE AYUDA · INSTALADOR LINUX · PUNTO VUELA MONTEJAQUE",styles["Sub"]),HRFlowable(width="100%",thickness=4,color=YELLOW,spaceAfter=12)]
+    story=[Paragraph("CLAUDE DESKTOP",styles["BrandTitle"]),Paragraph("GUÍA DE AYUDA · INSTALADOR LINUX · PUNTO VUELA MONTEJAQUE · VERSIÓN 1.0.1",styles["Sub"]),HRFlowable(width="100%",thickness=4,color=YELLOW,spaceAfter=12)]
     in_code=False
     for raw in SOURCE.read_text(encoding="utf-8").splitlines():
         line=raw.strip()

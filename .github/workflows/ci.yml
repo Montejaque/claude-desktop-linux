@@ -65,7 +65,7 @@ jobs:
               bash scripts/build-appimage.sh
               python3 scripts/build-help-pdf.py
               test -s dist/Claude-Desktop-Installer-x86_64.AppImage
-              test -s dist/Guia-Ayuda-Claude-Desktop-Punto-Vuela-Montejaque-v1.0.1.pdf
+              test -s dist/Guia-Ayuda-Claude-Desktop.pdf
               file dist/Claude-Desktop-Installer-x86_64.AppImage
               chmod +x dist/Claude-Desktop-Installer-x86_64.AppImage
             '

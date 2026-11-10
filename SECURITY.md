@@ -14,5 +14,5 @@
 
 Ubuntu 20.04 normalmente tiene glibc 2.31 y no satisface el requisito declarado libc6 >= 2.34. Se advierte antes de continuar.
 
-José Miguel Leotte · La Central Digital  
-info@lacentraldigital.es
+Desarrollador: Francisco Javier Gallego Orellana · Punto Vuela Montejaque  
+montejaque@puntosvuela.es

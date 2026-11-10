@@ -1,39 +1,57 @@
 # Claude Desktop Linux Installer
 
-Instalador independiente de Claude Desktop para Linux, diseñado con especial atención a equipos Ubuntu sin permisos de administrador.
+Instalador gráfico independiente para instalar Claude Desktop en el perfil del usuario Linux, sin permisos root.
 
-> **Estado:** fase inicial de desarrollo. No se promete compatibilidad con Ubuntu 20.04 hasta verificar una solución real y segura.
+> **Importante:** la vía incluida para Ubuntu 20.04 utiliza un AppImage comunitario no oficial. No está respaldada por Anthropic. El paquete se descarga desde GitHub Releases y se valida con el SHA-256 publicado para ese asset.
 
-## Objetivos
+## Funciones
 
-- Proyecto independiente; no comparte código ni dependencias con `chatgpt-installer-linux`.
-- Instalación por usuario, sin `sudo` ni permisos root.
-- Interfaz gráfica propia.
-- Acceso desde el menú de aplicaciones de GNOME mediante archivo `.desktop` e icono.
-- Detección de arquitectura, distribución, versión de sistema y versión de glibc.
-- Validación previa de compatibilidad antes de descargar o instalar.
-- Descarga verificable y gestión segura de actualizaciones y desinstalación.
-- No modificar bibliotecas del sistema ni reemplazar glibc.
+- Interfaz gráfica en español, con tema oscuro y acento amarillo.
+- Detecta distribución, arquitectura, kernel, sesión gráfica y glibc.
+- Descarga la última versión comunitaria publicada para amd64 o arm64.
+- Comprueba URL de origen, tamaño y SHA-256 antes de extraer el archivo.
+- Instala solo en `~/.local/opt`.
+- Crea lanzador de Claude en el menú GNOME y copia el icono incluido en el paquete.
+- Permite abrir, actualizar y desinstalar.
+- Conserva la configuración personal de Claude al desinstalar.
+- No utiliza sudo, no instala paquetes del sistema y no modifica glibc.
 
-## Compatibilidad
+## Requisitos
 
-Claude Desktop para Linux tiene requisitos de sistema más recientes que Ubuntu 20.04. La compatibilidad con Ubuntu 20.04 es un objetivo experimental, no una compatibilidad oficial garantizada.
+- Linux x86_64 o ARM64.
+- Python 3 y Tkinter.
+- Conexión HTTPS a GitHub.
+- Espacio libre de varios cientos de MB para descargar y extraer la aplicación.
 
-El instalador debe detenerse y explicar el motivo cuando el paquete oficial no pueda ejecutarse de forma segura. No debe intentar resolverlo copiando bibliotecas del sistema, alterando glibc o ignorando dependencias.
+## Ejecutar
 
-## Principios de seguridad
+```bash
+bash scripts/run-local.sh
+```
 
-1. No solicitar permisos root.
-2. No ejecutar instaladores remotos sin verificar su origen e integridad.
-3. No modificar archivos del sistema.
-4. No crear enlaces o lanzadores que apunten a rutas inexistentes.
-5. Mantener separadas la descarga, validación, instalación y ejecución.
-6. Ofrecer desinstalación limpia de los archivos instalados por la aplicación.
+Para crear un comando de usuario:
 
-## Desarrollo
+```bash
+bash scripts/install-launcher.sh
+```
 
-La primera etapa implementará el diagnóstico del sistema y el diseño del instalador. La integración con el paquete oficial se añadirá después de verificar los requisitos, el formato de distribución y el mecanismo de actualización.
+Después ejecuta:
 
-## Licencia
+```bash
+~/.local/bin/claude-desktop-installer
+```
 
-Pendiente de decisión.
+## Fuente del paquete comunitario
+
+- Proyecto: https://github.com/aaddrick/claude-desktop-debian
+- Última release: https://github.com/aaddrick/claude-desktop-debian/releases/latest
+
+Este proyecto de Montejaque no mantiene ni firma el AppImage. Se verifica su SHA-256 contra el digest publicado por GitHub para el asset de la release consultada.
+
+## Compatibilidad oficial
+
+Anthropic documenta Linux beta para Ubuntu 22.04 LTS o posterior y Debian 12 o posterior, en x64 y arm64. Ubuntu 20.04 no está en esa lista. Por eso el instalador no intenta forzar el paquete oficial ni sustituir bibliotecas del sistema.
+
+## Documentación
+
+Consulta [docs/INSTALLATION.md](docs/INSTALLATION.md) y [SECURITY.md](SECURITY.md).

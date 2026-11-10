@@ -22,6 +22,12 @@ Cadena de verificación: huella de clave -> firma InRelease -> SHA-256 de Packag
 
 La configuración personal de Claude no se gestiona ni se elimina. La actualización reutiliza la ruta de la instalación que ya se probó en el equipo.
 
+## Desarrollador y centro
+**Francisco Javier Gallego Orellana** · Punto Vuela Montejaque  
+Avenida Andalucía, 48 · 29360 Montejaque (Málaga)  
+633 402 959 · montejaque@puntosvuela.es  
+https://puntosvuela.es/centros/montejaque
+
 ## Desarrollo
 \`\`\`bash
 python3 -m tkinter

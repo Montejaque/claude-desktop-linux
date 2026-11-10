@@ -2,7 +2,7 @@
 from __future__ import annotations
 import threading,tkinter as tk,webbrowser
 from tkinter import messagebox,ttk
-from .installer import InstallError,check_latest,install_latest,is_installed,installed_version,launch,repair_access,uninstall
+from .installer import InstallError,check_latest,install_latest,is_installed,installed_version,version_is_newer,launch,repair_access,uninstall
 from .system_info import compatibility_summary
 BG="#FFFFFF"; FG="#252525"; MUTED="#686868"; PANEL="#F6F6F6"; YELLOW="#F3D54E"
 DEVELOPER="Francisco Javier Gallego Orellana · Punto Vuela Montejaque"; PHONE="633 402 959"; EMAIL="montejaque@puntosvuela.es"; ADDRESS="Avenida Andalucía, 48 · 29360 Montejaque (Málaga)"; WEB="https://puntosvuela.es/centros/montejaque"
@@ -74,7 +74,19 @@ class InstallerApp:
   self._busy(True); self.detail.set("Consultando versión oficial…"); threading.Thread(target=self._check,daemon=True).start()
  def _check(self):
   try:
-   p=check_latest(status=self._status); msg="Versión oficial disponible: %s\nVersión instalada: %s"%(p.version,installed_version() or "no instalada"); self.root.after(0,lambda:self._check_done(msg))
+   p=check_latest(status=self._status)
+   current=installed_version()
+   if not is_installed():
+    msg="Versión oficial disponible: %s\\nClaude Desktop no está instalado."%p.version
+   elif not current:
+    msg="Versión oficial disponible: %s\\nClaude Desktop está instalado, pero no se ha podido determinar su versión local. Pulsa Instalar / actualizar para normalizar la instalación."%p.version
+   elif version_is_newer(p.version,current) is True:
+    msg="Hay una actualización disponible.\\nVersión instalada: %s\\nNueva versión: %s\\nPulsa Instalar / actualizar para aplicarla."%(current,p.version)
+   elif version_is_newer(p.version,current) is False:
+    msg="Claude Desktop está actualizado.\\nVersión instalada: %s\\nÚltima versión oficial: %s"%(current,p.version)
+   else:
+    msg="Versión oficial disponible: %s\\nVersión instalada: %s"%(p.version,current)
+   self.root.after(0,lambda:self._check_done(msg))
   except Exception as exc:self.root.after(0,lambda e=str(exc):self._failed(e))
  def _check_done(self,msg):
   self._busy(False); self.detail.set("Comprobación terminada."); self._log(msg.replace("\n"," · ")); self.refresh(); messagebox.showinfo("Comprobar versión",msg,parent=self.root)

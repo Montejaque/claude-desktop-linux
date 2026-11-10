@@ -9,7 +9,7 @@ KEY_URL="https://downloads.claude.ai/claude-desktop/key.asc"
 EXPECTED_FINGERPRINT="31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE"
 MAX_INDEX_BYTES=30*1024*1024
 MAX_PACKAGE_BYTES=900*1024*1024
-USER_AGENT="LaCentralDigital-ClaudeDesktopInstaller/1.0"
+USER_AGENT="PuntoVuelaMontejaque-ClaudeDesktopInstaller/1.0.1"
 class ReleaseError(RuntimeError): pass
 @dataclass(frozen=True)
 class PackageInfo:

@@ -3,13 +3,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 APPIMAGETOOL="$ROOT/.tools/appimagetool"
+rm -rf build dist AppDir
 if [[ "${PYINSTALLER_BUILD_IN_FOCAL:-0}" == "1" ]]; then
   command -v docker >/dev/null || { echo "ERROR: Docker no está disponible en el runner" >&2; exit 1; }
   docker run --rm -v "$ROOT:/src" -w /src ubuntu:20.04 bash -lc '
     set -euo pipefail
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y --no-install-recommends python3 python3-tk python3-pip binutils
+    apt-get install -y --no-install-recommends python3 python3-tk python3-pip binutils patchelf
     python3 -m pip install --upgrade "pip<25"
     python3 -m pip install "pyinstaller==6.11.1"
     python3 -m PyInstaller --noconfirm --clean --onedir --windowed --name claude-desktop-installer --collect-all tkinter --hidden-import _tkinter --add-data "docs/GUIA_USUARIO.md:docs" launcher.py
@@ -23,7 +24,6 @@ else
   command -v python3 >/dev/null
   python3 -c 'import tkinter'
   python3 -m PyInstaller --version >/dev/null
-  rm -rf build dist
   python3 -m PyInstaller --noconfirm --clean --onedir --windowed --name claude-desktop-installer --collect-all tkinter --hidden-import _tkinter --add-data "docs/GUIA_USUARIO.md:docs" launcher.py
 fi
 rm -rf AppDir

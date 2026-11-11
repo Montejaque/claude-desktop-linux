@@ -9,7 +9,7 @@ DEVELOPER="Francisco Javier Gallego Orellana · Punto Vuela Montejaque"; PHONE="
 GUIDE="https://github.com/Montejaque/claude-desktop-linux/blob/main/docs/GUIA_USUARIO.md"
 class InstallerApp:
  def __init__(self,root):
-  self.root=root; root.title("Claude Desktop · Instalador Linux"); root.geometry("820x690"); root.minsize(760,640); root.configure(bg=BG)
+  self.root=root; root.title("Claude Desktop · Instalador Linux"); root.geometry("820x700"); root.minsize(620,480); root.resizable(True,True); root.configure(bg=BG)
   self.busy=False; self.compat=compatibility_summary(); style=ttk.Style(root)
   try: style.theme_use("clam")
   except tk.TclError: pass
@@ -18,7 +18,24 @@ class InstallerApp:
   style.configure("Status.TLabel",background=PANEL,foreground=FG,font=("DejaVu Sans",10,"bold")); style.configure("TButton",font=("DejaVu Sans",9),padding=(10,8))
   style.configure("Accent.TButton",background=YELLOW,foreground=FG,font=("DejaVu Sans",9,"bold")); style.map("Accent.TButton",background=[("active","#E3C43E")])
   style.configure("Horizontal.TProgressbar",troughcolor="#E8E8E8",background=YELLOW)
-  outer=ttk.Frame(root,padding=24); outer.pack(fill="both",expand=True)
+  # Contenedor desplazable para resoluciones bajas y escalado de pantalla.
+  viewport=ttk.Frame(root); viewport.pack(fill="both",expand=True)
+  canvas=tk.Canvas(viewport,bg=BG,highlightthickness=0)
+  scrollbar=ttk.Scrollbar(viewport,orient="vertical",command=canvas.yview)
+  canvas.configure(yscrollcommand=scrollbar.set)
+  scrollbar.pack(side="right",fill="y"); canvas.pack(side="left",fill="both",expand=True)
+  outer=ttk.Frame(canvas,padding=24)
+  window_id=canvas.create_window((0,0),window=outer,anchor="nw")
+  def update_scroll_region(_event=None):
+   canvas.configure(scrollregion=canvas.bbox("all"))
+  def fit_content_width(event):
+   canvas.itemconfigure(window_id,width=event.width)
+  outer.bind("<Configure>",update_scroll_region)
+  canvas.bind("<Configure>",fit_content_width)
+  # Rueda del ratón: Linux (rueda arriba/abajo) y Windows/macOS.
+  canvas.bind_all("<MouseWheel>",lambda event:canvas.yview_scroll(int(-event.delta/120),"units"))
+  canvas.bind_all("<Button-4>",lambda event:canvas.yview_scroll(-3,"units"))
+  canvas.bind_all("<Button-5>",lambda event:canvas.yview_scroll(3,"units"))
   tk.Label(outer,text="CLAUDE DESKTOP",bg=BG,fg=FG,font=("DejaVu Sans",22,"bold")).pack(anchor="w")
   tk.Label(outer,text="INSTALADOR LINUX · PAQUETE OFICIAL DE ANTHROPIC",bg=BG,fg=MUTED,font=("DejaVu Sans",9,"bold")).pack(anchor="w",pady=(4,12))
   tk.Frame(outer,bg=YELLOW,height=4).pack(fill="x",pady=(0,15))

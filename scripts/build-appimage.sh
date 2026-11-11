@@ -16,13 +16,15 @@ python3 -m PyInstaller --noconfirm --clean --onedir --windowed --name claude-des
 mkdir -p AppDir/usr/bin AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/scalable/apps dist
 cp -a dist/claude-desktop-installer/. AppDir/usr/bin/
 cp assets/claude-installer.svg AppDir/usr/share/icons/hicolor/scalable/apps/claude-desktop-installer.svg
+test -x AppDir/usr/bin/claude-desktop-installer
 cat > AppDir/AppRun <<'EOF'
 #!/bin/sh
-HERE="$(dirname "$(readlink -f "$0")")"
+set -eu
+HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 APP="$HERE/usr/bin/claude-desktop-installer"
-if [[ ! -x "$APP" ]]; then
-  echo "No se encuentra el ejecutable de Claude Desktop Installer: $APP" >&2
-  echo "Contenido de usr/bin:" >&2
+if [ ! -x "$APP" ]; then
+  echo "ERROR: no se encuentra el ejecutable: $APP" >&2
+  echo "Contenido de $HERE/usr/bin:" >&2
   ls -la "$HERE/usr/bin" >&2
   exit 127
 fi

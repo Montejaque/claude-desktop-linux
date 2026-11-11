@@ -74,7 +74,7 @@ Type=Application
 Name=Claude
 Comment=Claude Desktop oficial de Anthropic
 Exec={wrapper} %U
-Icon=claude-desktop
+Icon={icon}
 Terminal=false
 Categories=Office;Utility;Development;
 StartupNotify=true
@@ -82,11 +82,7 @@ StartupWMClass=com.anthropic.Claude
 MimeType=x-scheme-handler/claude;
 """.format(wrapper=WRAPPER,icon=icon_value)
     temp=DESKTOP.with_suffix(".desktop.tmp"); temp.write_text(desktop,encoding="utf-8"); temp.chmod(0o644); temp.replace(DESKTOP)
-    for path in ICON_ROOT.glob("*/apps/*claude*") if ICON_ROOT.exists() else []:
-        try: path.unlink()
-        except FileNotFoundError: pass
     _optional(["update-desktop-database",str(APPLICATIONS)])
-    _optional(["gtk-update-icon-cache","-f","-t",str(ICON_ROOT)])
     _optional(["gtk-update-icon-cache","-f","-t",str(ICON_ROOT)])
     _optional(["xdg-mime","default",DESKTOP.name,"x-scheme-handler/claude"])
 def install_latest(progress=None,status=None):
@@ -130,4 +126,8 @@ def uninstall():
     for path in (DESKTOP,WRAPPER,ICON):
         try: path.unlink()
         except FileNotFoundError: pass
+    for path in ICON_ROOT.glob("*/apps/*claude*") if ICON_ROOT.exists() else []:
+        try: path.unlink()
+        except FileNotFoundError: pass
     _optional(["update-desktop-database",str(APPLICATIONS)])
+    _optional(["gtk-update-icon-cache","-f","-t",str(ICON_ROOT)])

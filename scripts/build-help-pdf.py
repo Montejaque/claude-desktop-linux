@@ -16,7 +16,7 @@ def xml(text):
     return text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
 def build():
     OUT.parent.mkdir(parents=True,exist_ok=True)
-    doc=SimpleDocTemplate(str(OUT),pagesize=A4,rightMargin=19*mm,leftMargin=19*mm,topMargin=22*mm,bottomMargin=20*mm,title="Guía de ayuda · Claude Desktop Installer · Versión 1.0.1",author="Francisco Javier Gallego Orellana · Punto Vuela Montejaque")
+    doc=SimpleDocTemplate(str(OUT),pagesize=A4,rightMargin=19*mm,leftMargin=19*mm,topMargin=22*mm,bottomMargin=20*mm,title="Guía de ayuda · Claude Desktop Installer · Versión 1.0.3",author="Francisco Javier Gallego Orellana · Punto Vuela Montejaque")
     styles=getSampleStyleSheet()
     styles.add(ParagraphStyle(name="BrandTitle",parent=styles["Title"],fontName="Helvetica-Bold",fontSize=22,leading=27,textColor=DARK,alignment=TA_LEFT,spaceAfter=5))
     styles.add(ParagraphStyle(name="Sub",parent=styles["Normal"],fontSize=9,textColor=GREY,leading=13,spaceAfter=10))

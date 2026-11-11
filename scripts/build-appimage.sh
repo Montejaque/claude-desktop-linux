@@ -3,16 +3,30 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 APPIMAGETOOL="$ROOT/.tools/appimagetool"
-command -v python3 >/dev/null
-python3 -c 'import tkinter'
-python3 -m PyInstaller --version >/dev/null
-if [[ ! -x "$APPIMAGETOOL" ]]; then
- mkdir -p "$ROOT/.tools"
- curl -fL --retry 3 "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -o "$APPIMAGETOOL"
- chmod +x "$APPIMAGETOOL"
+if [[ "${PYINSTALLER_BUILD_IN_FOCAL:-0}" == "1" ]]; then
+  command -v docker >/dev/null || { echo "ERROR: Docker no está disponible en el runner" >&2; exit 1; }
+  docker run --rm -v "$ROOT:/src" -w /src ubuntu:20.04 bash -lc '
+    set -euo pipefail
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends python3 python3-tk python3-pip binutils
+    python3 -m pip install --upgrade "pip<25"
+    python3 -m pip install "pyinstaller==6.11.1"
+    python3 -m PyInstaller --noconfirm --clean --onedir --windowed --name claude-desktop-installer --collect-all tkinter --hidden-import _tkinter --add-data "docs/GUIA_USUARIO.md:docs" launcher.py
+    LIBPYTHON="$(find dist/claude-desktop-installer -maxdepth 2 -name "libpython3*.so*" -print -quit)"
+    test -n "$LIBPYTHON"
+    MAX_GLIBC="$(readelf --version-info "$LIBPYTHON" | grep -Eo "GLIBC_[0-9.]+" | sort -Vu | tail -n1 | cut -d_ -f2)"
+    echo "GLIBC máxima requerida por $LIBPYTHON: $MAX_GLIBC"
+    dpkg --compare-versions "$MAX_GLIBC" le 2.31 || { echo "ERROR: el binario supera GLIBC 2.31" >&2; exit 1; }
+  '
+else
+  command -v python3 >/dev/null
+  python3 -c 'import tkinter'
+  python3 -m PyInstaller --version >/dev/null
+  rm -rf build dist
+  python3 -m PyInstaller --noconfirm --clean --onedir --windowed --name claude-desktop-installer --collect-all tkinter --hidden-import _tkinter --add-data "docs/GUIA_USUARIO.md:docs" launcher.py
 fi
-rm -rf build dist AppDir
-python3 -m PyInstaller --noconfirm --clean --onedir --windowed --name claude-desktop-installer --collect-all tkinter --hidden-import _tkinter --add-data "docs/GUIA_USUARIO.md:docs" launcher.py
+rm -rf AppDir
 mkdir -p AppDir/usr/bin AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/scalable/apps dist
 cp -a dist/claude-desktop-installer/. AppDir/usr/bin/
 cp assets/claude-installer.svg AppDir/usr/share/icons/hicolor/scalable/apps/claude-desktop-installer.svg

@@ -10,7 +10,7 @@ if [[ "${PYINSTALLER_BUILD_IN_FOCAL:-0}" == "1" ]]; then
     set -euo pipefail
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y --no-install-recommends python3 python3-tk python3-pip binutils patchelf
+    apt-get install -y --no-install-recommends python3 python3-tk python3-dev python3-pip python3.8-dev binutils patchelf
     python3 -m pip install --upgrade "pip<25"
     python3 -m pip install "pyinstaller==6.11.1"
     python3 -m PyInstaller --noconfirm --clean --onedir --windowed --name claude-desktop-installer --collect-all tkinter --hidden-import _tkinter --add-data "docs/GUIA_USUARIO.md:docs" launcher.py

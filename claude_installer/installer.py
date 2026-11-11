@@ -8,8 +8,10 @@ INSTALL_DIR=Path.home()/".local/opt"/APP_ID
 WRAPPER=Path.home()/".local/bin/claude-desktop-oficial"
 APPLICATIONS=Path.home()/".local/share/applications"
 DESKTOP=APPLICATIONS/"claude-desktop.desktop"
-ICON_DIR=Path.home()/".local/share/icons/hicolor/256x256/apps"
+ICON_ROOT=Path.home()/".local/share/icons/hicolor"
+ICON_DIR=ICON_ROOT/"256x256/apps"
 ICON=ICON_DIR/"claude-desktop.png"
+ICON_FILES=[]
 CACHE=Path.home()/".cache/claude-desktop-installer"
 class InstallError(RuntimeError): pass
 def is_installed(): return (INSTALL_DIR/"usr/lib/claude-desktop/claude-desktop").is_file()
@@ -38,9 +40,33 @@ export LD_LIBRARY_PATH="$APP"
 exec "$APP/claude-desktop" "$@"
 '''
     temp=WRAPPER.with_suffix(".tmp"); temp.write_text(content,encoding="utf-8"); temp.chmod(0o700); temp.replace(WRAPPER)
-    source=INSTALL_DIR/"usr/share/icons/hicolor/256x256/apps/claude-desktop.png"
-    if not source.is_file(): source=INSTALL_DIR/"usr/share/icons/hicolor/128x128/apps/claude-desktop.png"
-    if source.is_file(): ICON_DIR.mkdir(parents=True,exist_ok=True); shutil.copy2(source,ICON)
+    # Instala los tamaños y formatos disponibles del paquete oficial en el
+    # tema hicolor del usuario. No dependemos de que exista solo 128/256 px.
+    global ICON_FILES
+    for previous in ICON_FILES:
+        try: previous.unlink()
+        except FileNotFoundError: pass
+    ICON_FILES=[]
+    icon_source=INSTALL_DIR/"usr/share/icons/hicolor"
+    if icon_source.is_dir():
+        for source in icon_source.glob("*/apps/*"):
+            if source.is_file() and source.suffix.lower() in (".png",".svg",".xpm") and "claude" in source.name.lower():
+                relative=source.relative_to(icon_source)
+                destination=ICON_ROOT/relative
+                destination.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copy2(source,destination)
+                ICON_FILES.append(destination)
+    pixmaps=INSTALL_DIR/"usr/share/pixmaps"
+    if pixmaps.is_dir() and not ICON_FILES:
+        for source in pixmaps.glob("*claude*"):
+            if source.is_file() and source.suffix.lower() in (".png",".svg",".xpm"):
+                destination=ICON_DIR/("claude-desktop"+source.suffix.lower())
+                destination.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copy2(source,destination)
+                ICON_FILES.append(destination)
+    icon_value="claude-desktop"
+    if not ICON_FILES:
+        icon_value="system-run"
     APPLICATIONS.mkdir(parents=True,exist_ok=True)
     desktop="""[Desktop Entry]
 Version=1.0
@@ -54,9 +80,14 @@ Categories=Office;Utility;Development;
 StartupNotify=true
 StartupWMClass=com.anthropic.Claude
 MimeType=x-scheme-handler/claude;
-""".format(wrapper=WRAPPER)
+""".format(wrapper=WRAPPER,icon=icon_value)
     temp=DESKTOP.with_suffix(".desktop.tmp"); temp.write_text(desktop,encoding="utf-8"); temp.chmod(0o644); temp.replace(DESKTOP)
+    for path in ICON_ROOT.glob("*/apps/*claude*") if ICON_ROOT.exists() else []:
+        try: path.unlink()
+        except FileNotFoundError: pass
     _optional(["update-desktop-database",str(APPLICATIONS)])
+    _optional(["gtk-update-icon-cache","-f","-t",str(ICON_ROOT)])
+    _optional(["gtk-update-icon-cache","-f","-t",str(ICON_ROOT)])
     _optional(["xdg-mime","default",DESKTOP.name,"x-scheme-handler/claude"])
 def install_latest(progress=None,status=None):
     if not shutil.which("dpkg-deb"): raise InstallError("Falta dpkg-deb. No se ha modificado el sistema.")

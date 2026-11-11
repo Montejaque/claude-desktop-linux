@@ -1,6 +1,6 @@
 # Construcción de AppImage y guía PDF
 
-**Versión del proyecto: 1.0.3**
+**Versión del proyecto: 1.0.4**
 
 La AppImage contiene **Claude Desktop Installer**, no el binario de Claude Desktop. Al instalar, la herramienta descarga el paquete oficial desde la infraestructura de Anthropic y verifica su autenticidad e integridad.
 

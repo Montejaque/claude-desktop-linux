@@ -1,6 +1,6 @@
 # Construcción de AppImage y guía PDF
 
-**Versión del proyecto: 1.0.1**
+**Versión del proyecto: 1.0.3**
 
 La AppImage contiene **Claude Desktop Installer**, no el binario de Claude Desktop. Al instalar, la herramienta descarga el paquete oficial desde la infraestructura de Anthropic y verifica su autenticidad e integridad.
 
@@ -24,7 +24,7 @@ Resultados:
 - `dist/Guia-Ayuda-Claude-Desktop.pdf`
 
 ## Integración continua y publicación
-El workflow `.github/workflows/ci.yml` ejecuta las pruebas unitarias con Python 3.8, 3.10 y 3.12. También construye la AppImage y el PDF dentro de un contenedor Ubuntu 20.04 para mantener compatibilidad con glibc 2.31.
+El workflow `.github/workflows/ci.yml` ejecuta las pruebas unitarias y construye la AppImage y el PDF dentro de un contenedor Ubuntu 20.04 para mantener compatibilidad con glibc 2.31.
 
 Al publicar una etiqueta `v*`, el workflow intenta adjuntar la AppImage y el PDF a la GitHub Release asociada. La publicación solo debe considerarse completa cuando ambos archivos aparezcan en la sección **Assets** de la release y la ejecución del workflow haya finalizado correctamente.
 

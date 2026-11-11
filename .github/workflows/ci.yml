@@ -24,7 +24,8 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-tk curl ca-certificates file libfuse2
+          sudo apt-get install -y python3-tk curl ca-certificates file libfuse2 docker.io
+          sudo systemctl start docker
           python -m pip install --upgrade "pip<25"
           python -m pip install "pyinstaller==6.11.1" "reportlab==4.2.5"
 

@@ -19,7 +19,14 @@ cp assets/claude-installer.svg AppDir/usr/share/icons/hicolor/scalable/apps/clau
 cat > AppDir/AppRun <<'EOF'
 #!/bin/sh
 HERE="$(dirname "$(readlink -f "$0")")"
-exec "$HERE/usr/bin/claude-desktop-installer/claude-desktop-installer" "$@"
+APP="$HERE/usr/bin/claude-desktop-installer"
+if [[ ! -x "$APP" ]]; then
+  echo "No se encuentra el ejecutable de Claude Desktop Installer: $APP" >&2
+  echo "Contenido de usr/bin:" >&2
+  ls -la "$HERE/usr/bin" >&2
+  exit 127
+fi
+exec "$APP" "$@"
 EOF
 chmod +x AppDir/AppRun
 cat > AppDir/claude-desktop-installer.desktop <<'EOF'

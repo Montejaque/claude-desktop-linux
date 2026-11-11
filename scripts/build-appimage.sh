@@ -3,6 +3,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 APPIMAGETOOL="$ROOT/.tools/appimagetool"
+mkdir -p "$ROOT/.tools"
+if [[ ! -x "$APPIMAGETOOL" ]]; then
+  curl -fL --retry 3 "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -o "$APPIMAGETOOL"
+  chmod +x "$APPIMAGETOOL"
+fi
 rm -rf build dist AppDir
 if [[ "${PYINSTALLER_BUILD_IN_FOCAL:-0}" == "1" ]]; then
   command -v docker >/dev/null || { echo "ERROR: Docker no está disponible en el runner" >&2; exit 1; }

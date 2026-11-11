@@ -1,6 +1,6 @@
 # Guía de ayuda · Claude Desktop Installer
 
-**Punto Vuela Montejaque** · Versión 1.0.3 · Linux
+**Punto Vuela Montejaque** · Versión 1.0.4 · Linux
 
 ## 1. Qué hace esta herramienta
 Instala Claude Desktop oficial de Anthropic en la cuenta del usuario Linux. La AppImage distribuida es el instalador, no la aplicación Claude. El paquete de Claude se descarga desde el repositorio oficial de Anthropic cuando se realiza la instalación.

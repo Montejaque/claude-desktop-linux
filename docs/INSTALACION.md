@@ -1,6 +1,6 @@
 # Instalación y arquitectura técnica
 
-**Claude Desktop Installer para Linux · Versión 1.0.3**
+**Claude Desktop Installer para Linux · Versión 1.0.4**
 
 ## Arquitectura
 - `claude_installer/release_source.py`: descarga la clave y los metadatos del repositorio oficial; fija la huella y valida la firma de `InRelease`, el hash del índice `Packages` y el hash del paquete DEB.

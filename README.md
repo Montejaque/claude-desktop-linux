@@ -1,6 +1,6 @@
 # Claude Desktop Installer para Linux
 
-**Versión 1.0.1**
+**Versión 1.0.3**
 
 Instalador gráfico independiente para **Claude Desktop oficial de Anthropic**. Descarga el paquete DEB desde el repositorio APT oficial, verifica la firma GPG del manifiesto, el SHA-256 del índice y el SHA-256 del paquete y lo extrae en el perfil del usuario, sin sudo.
 

@@ -1,3 +1,11 @@
+# Changelog
+
+## 1.0.4
+
+- Interfaz del instalador adaptable y desplazable en pantallas con poca altura.
+- Registro del acceso al menú de aplicaciones e instalación de los iconos del paquete oficial en el tema hicolor del usuario.
+- Actualización del flujo de compilación: publica una versión nueva únicamente al crear una etiqueta de versión.
+
 # Historial de cambios
 
 ## 1.0.1
